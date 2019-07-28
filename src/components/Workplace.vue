@@ -1,6 +1,6 @@
 <template>
     <div class="card shadow mb-4">
-        <Navbar :clearSentences="clearSentences" :getSentences="readJson"/>
+        <Navbar :clearSentences="clearSentences" :getSentences="askFromServer"/>
         <div class="row">
             <div class="col-md-6">
                 <div id="inputReferences" v-if="allData.inputComparison.referenceSentences.length > 0">
@@ -67,7 +67,7 @@
         methods: {
             // When start using server
             askFromServer() {
-                fetch("https://pokeapi.co/api/v2/pokemon/?limit=4",
+                fetch("http://localhost:8080",
                     {
                         method: 'GET',
                         headers: {
@@ -78,7 +78,7 @@
                     res => res.json(),
                     error => this.console.log(error)
                 ).then(res => {
-                    this.sentences = res.results
+                    this.allData = res.results
                 });
             },
             readJson(lineNr, language) {
