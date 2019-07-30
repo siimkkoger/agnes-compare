@@ -21,15 +21,21 @@
                 </li>
                 <input class="form-control mr-sm-2 inputfield" type="search" placeholder="Notes" aria-label="Search">
             </div>
+            <div v-for="mistake in mistakes">
+                <PredictionMistake :wordsInvolved="mistake.mistake.wordsInvolved" :type="mistake.mistake.type" :needToBeChanged="mistake.mistake.needToBeChanged"/>
+            </div>
             <div class="card-footer"></div>
         </div>
     </div>
 </template>
 
 <script>
+    import PredictionMistake from "./PredictionMistake";
+
     export default {
         name: "Prediction",
-        props: ["sentence"],
+        props: ["sentence", "note", "mistakes"],
+        components: {PredictionMistake},
         data: () => {
             return {
                 selectedWord: "null",

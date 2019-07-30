@@ -6,7 +6,7 @@
 
 <script>
     export default {
-        name: "InputMistake",
+        name: "PredictionMistake",
         props: ["wordsInvolved", "type", "needToBeChanged"]
     }
 </script>

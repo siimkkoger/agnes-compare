@@ -27,6 +27,6 @@
     }
     body {
         background-image: url("./assets/wolf-bg.jpg");
-        opacity: 0.98;
+        opacity: 1;
     }
 </style>

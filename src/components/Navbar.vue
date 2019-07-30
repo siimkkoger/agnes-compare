@@ -22,7 +22,7 @@
                     </select>
                     <input class="form-control mr-sm-2" v-model="lineNr" type="number" :min="minLine" :max="maxLine" placeholder="Line nr" aria-label="Line Nr">
                     <button v-on:click="getSentencesPrep" class="btn btn-outline-success my-2 my-sm-0">Get sentences</button>
-                    <button class="btn btn-outline-warning my-2 my-sm-0">Save</button>
+                    <button v-on:click="sendAnalysedDataToServer" class="btn btn-outline-warning my-2 my-sm-0">Save</button>
                 </div>
             </div>
         </nav>
@@ -54,7 +54,8 @@
         },
         props: [
             "getSentences",
-            "clearSentences"
+            "clearSentences",
+            "sendAnalysedDataToServer"
         ],
         methods: {
             getSentencesPrep() {

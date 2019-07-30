@@ -13,7 +13,7 @@
                               @click="selectWord">{{ w.word }}</span>
                     </span>
                 </li>
-                <input class="form-control mr-sm-2 inputfield" v-bind:aria-valuetext="notes" type="search" placeholder="Notes" aria-label="Search">
+                <input class="form-control mr-sm-2 inputfield" v-model="note" type="search" placeholder="Note" aria-label="Search">
                 <div class="">
                     <button type="button" class="btn btn-primary" @click="confirmMistake">Add mistake</button>
                     <form>
@@ -26,12 +26,15 @@
                                     <label class="custom-control-label" :for="'error-' + error">{{error}}</label>
                                 </div>
                             </div>
+                            <input id="mistakeNeedsChange" type="checkbox" v-model="selectedNeedToBeChanged">
+                            <label for="mistakeNeedsChange">Mistake needs change</label>
                         </div>
                     </form>
                 </div>
-                <div v-for="mistake in inputMistakes">
-                    <InputMistake :words="mistake.words" :type="mistake.type"/>
+                <div v-for="mistake in mistakes">
+                    <InputMistake :wordsInvolved="mistake.wordsInvolved" :type="mistake.type" :needToBeChanged="mistake.needToBeChanged"/>
                 </div>
+                <div class="card-footer"></div>
             </div>
         </div>
     </div>
@@ -41,14 +44,14 @@
     import InputMistake from "./InputMistake";
 
     export default {
-        name: "inputMistake",
+        name: "input-component",
         components: {InputMistake},
-        props: ["sentence", "notes"],
+        props: ["sentence", "note", "mistakes", "updateHypothesisMistakes"],
         data: () => {
             return {
                 selectedWords: [],
-                inputMistakes: [],
                 selectedErrorType: "",
+                selectedNeedToBeChanged: false,
                 errorTypes: ["Lex", "Spelling", "Grammar", "Order"],
                 TYPE_ALL: "ALL",
                 TYPE_SOME: "SOME",
@@ -70,17 +73,20 @@
                     console.log("PLEASE FILL WHOLE FORM");
                     return;
                 }
-                this.inputMistakes.push({
-                    words: this.selectedWords,
-                    type: this.selectedErrorType
+                this.mistakes.push({
+                    wordsInvolved: this.selectedWords,
+                    type: this.selectedErrorType,
+                    needToBeChanged: this.selectedNeedToBeChanged
                 });
                 this.selectedWords = [];
                 this.selectedErrorType = "";
+                this.selectedNeedToBeChanged = false;
                 let wordTags = document.getElementsByClassName("word");
                 for (let i = 0; i < wordTags.length; i++) {
                     let element = wordTags[i];
                     element.classList.remove("word-selected");
                 }
+                this.updateHypothesisMistakes(this.mistakes);
             },
             showListMessage(close) {
                 var x = document.getElementById("alreadyInErrorList");
