@@ -34,8 +34,8 @@
                 <div v-for="mistake in mistakes">
                     <InputMistake :wordsInvolved="mistake.wordsInvolved" :type="mistake.type" :needToBeChanged="mistake.needToBeChanged"/>
                 </div>
-                <div class="card-footer"></div>
             </div>
+            <div class="card-footer"></div>
         </div>
     </div>
 </template>

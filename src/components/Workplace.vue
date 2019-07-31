@@ -10,7 +10,7 @@
         </button>
         <div v-if="!loadingServerData && !sendingServerData" class="card shadow mb-4">
             <Navbar :clearSentences="clearSentences"
-                    :getSentences="askFromServer"
+                    :getSentences="getFirstSentence"
                     :sendAnalysedDataToServer="sendAnalysedDataToServer"/>
             <div class="row">
                 <div class="col-md-6">
@@ -46,6 +46,8 @@
     import Input from './Input.vue'
     import Prediction from './Prediction.vue'
     import Navbar from "./Navbar";
+    import {languageService} from "../services/languageService";
+    import {AllData} from "../classes/AllData";
 
     export default {
         name: "Workplace",
@@ -60,72 +62,14 @@
                 showMotivation: false,
                 loadingServerData: false,
                 sendingServerData: false,
-                allData: {
-                    analysedHypothesisSentence: {
-                        note: "",
-                        unnecessaryChanges: false,
-                        sentenceEvaluation: "null",
-                        /*
-                        {
-                            mistake: {
-                                id: null,
-                                type: "null",
-                                needToBeChanged: false,
-                                wordsInvolved: []
-                            },
-                            mistakeEvaluation: ""
-                        }
-                        */
-                        analysedMistakes: []
-                    },
-                    analysedInputSentence: {
-                        /*
-                        {
-                            id: null,
-                            type: "null",
-                            needToBeChanged: false,
-                            wordsInvolved: []
-                        }
-                         */
-                        note: "",
-                        mistakes: []
-                    },
-                    hypothesisComparison: {
-                        hypSentence: [],
-                        referenceSentences: []
-                    },
-                    inputComparison: {
-                        inputSentence: [],
-                        referenceSentences: []
-                    }
-                },
-                sentenceEvaluationEnum: {
-                    PERFECT: "PERFECT",
-                    INCOMPLETE: "INCOMPLETE",
-                    MEANING_CHANGED: "MEANING_CHANGED",
-                    NONSENSE: "NONSENSE"
-                },
-                mistakeEvaluationEnum: {
-                    NOT_CHANGED: "NOT_CHANGED",
-                    CORRECTED: "CORRECTED",
-                    INCOMPLETE: "INCOMPLETE",
-                    WRONG: "WRONG"
-                }
+                allData: new AllData()
             };
         },
         methods: {
-            // When start using server
-            askFromServer() {
+            getFirstSentence(language, line, fileName) {
                 this.loadingServerData = true;
-                fetch("http://192.168.8.106:8080",
-                    {
-                        method: 'GET',
-                        headers: {
-                            Accept: 'application/json',
-                        }
-                    }
-                )
-                    .then(res => res.json())
+                let data = languageService.getFirstSentence(language, line, fileName);
+                data.then(res => res.json())
                     .then(res => {
                         this.allData = res;
                         if (!this.allData.analysedHypothesisSentence) {
@@ -134,6 +78,12 @@
                                 unnecessaryChanges: false,
                                 sentenceEvaluation: "null",
                                 analysedMistakes: []
+                            }
+                        }
+                        if (!this.allData.analysedInputSentence) {
+                            this.allData.analysedInputSentence = {
+                                note: "",
+                                mistakes: []
                             }
                         }
                     })
@@ -148,20 +98,8 @@
                     analysedHypothesis: this.allData.analysedHypothesis,
                     analysedInputs: this.allData.analysedInputs
                 };
-                return fetch("http://192.168.8.106:8080/receiveData", {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    cache: 'no-cache',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    redirect: 'follow',
-                    referrer: 'no-referrer',
-                    body: JSON.stringify(sendAnalyseData),
-                })
+                return languageService.saveAnalysedData(sendAnalyseData)
                     .then(response => response.json())
-                    .then(data => console.log(JSON.stringify(data)))
                     .catch(error => console.error(error))
                     .finally(() => {
                         this.sendingServerData = false;
