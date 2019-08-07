@@ -4,10 +4,20 @@
     </div>
 </template>
 
-<script>
-    export default {
-        name: "InputMistake",
-        props: ["wordsInvolved", "type", "needToBeChanged"]
+<script lang="ts">
+    import {Component, Prop, Vue} from "vue-property-decorator";
+    import {MistakeTypeEnum} from "@/enums/MistakeTypeEnum";
+
+    @Component({})
+    export default class InputMistake extends Vue {
+        @Prop()
+        private id?: number;
+        @Prop()
+        private type?: MistakeTypeEnum;
+        @Prop()
+        private wordsInvolved: string[] = [];
+        @Prop()
+        private needToBeChanged?: boolean;
     }
 </script>
 

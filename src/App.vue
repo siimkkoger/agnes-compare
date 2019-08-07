@@ -1,19 +1,21 @@
 <template>
     <div id="app">
-        <Workplace/>
+        <NavBar></NavBar>
     </div>
 </template>
 
-<script>
-    import 'bootstrap'
-    import 'bootstrap/dist/css/bootstrap.min.css'
-    import Workplace from './components/Workplace.vue'
+<script lang="ts">
+    import "bootstrap";
+    import "bootstrap/dist/css/bootstrap.min.css";
+    import {Component, Vue} from "vue-property-decorator";
+    import NavBar from "@/components/NavBar.vue";
 
-    export default {
-        name: 'app',
+    @Component({
         components: {
-            Workplace
-        }
+            NavBar,
+        },
+    })
+    export default class App extends Vue {
     }
 </script>
 
@@ -25,6 +27,7 @@
         text-align: center;
         color: #2c3e50;
     }
+
     body {
         background-image: url("./assets/wolf-bg.jpg");
         opacity: 1;

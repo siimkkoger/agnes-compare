@@ -1,13 +1,19 @@
 <template>
     <div>
-        <li class="list-group-item">Type: {{type}}, Words: {{wordsInvolved}}, Needs Change: {{needToBeChanged}}</li>
+        <li class="list-group-item">Id: {{mistakeId}}, Mistake Evaluation: {{mistakeEvaluation}}</li>
     </div>
 </template>
 
-<script>
-    export default {
-        name: "PredictionMistake",
-        props: ["wordsInvolved", "type", "needToBeChanged"]
+<script lang="ts">
+    import {Component, Prop, Vue} from "vue-property-decorator";
+    import {MistakeEvaluationEnum} from "@/enums/MistakeEvaluationEnum";
+
+    @Component({})
+    export default class PredictionMistake extends Vue {
+        @Prop()
+        private mistakeId?: number;
+        @Prop()
+        private mistakeEvaluation?: MistakeEvaluationEnum;
     }
 </script>
 
