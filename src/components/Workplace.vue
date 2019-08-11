@@ -1,39 +1,35 @@
 <template>
     <div>
-        <div class="row" v-if="allData.inputComparison && allData.hypothesisComparison">
+        <div class="row" v-if="localAllDataInputComparison && localAllDataHypothesisComparison">
             <div class="col-md-6">
-                <div id="inputReferences" v-if="allData && allData.inputComparison.referenceSentences.length > 0">
-                    <ul class="list-group" v-for="s in allData.inputComparison.referenceSentences">
+                <div id="inputReferences" class="references"
+                     v-if="showReferences && localAllDataInputComparison.referenceSentences">
+                    <ul class="list-group" v-for="s in localAllDataInputComparison.referenceSentences">
                         <ReferenceSentence :words="s"/>
                     </ul>
                 </div>
-                <InputWorkplace v-if="allData"
-                                :sentence="allData.inputComparison.inputSentence"
-                                :analysedInputSentence="allData.analysedInputSentence"
-                                :updateHypothesisMistakes="updateHypothesisMistakes"/>
+                <InputWorkplace v-if="localAllData"/>
             </div>
             <div class="col-md-6">
-                <div id="predictionReferences" v-if="allData.hypothesisComparison.referenceSentences.length > 0">
-                    <ul class="list-group" v-for="s in allData.hypothesisComparison.referenceSentences">
+                <div id="predictionReferences" class="references"
+                     v-if="showReferences && localAllDataHypothesisComparison.referenceSentences">
+                    <ul class="list-group" v-for="s in localAllDataHypothesisComparison.referenceSentences">
                         <ReferenceSentence :words="s"/>
                     </ul>
                 </div>
-                <HypothesisWorkplace v-if="allData"
-                                     :sentence="allData.hypothesisComparison.hypSentence"
-                                     :analysedHypothesisSentence="allData.analysedHypothesisSentence"/>
+                <HypothesisWorkplace v-if="localAllData"/>
             </div>
         </div>
     </div>
 </template>
 
 <script lang="ts">
-    import {Component, Prop, Vue} from "vue-property-decorator";
+    import Vue from "vue";
+    import Component from "vue-class-component";
     import InputWorkplace from "./InputWorkplace.vue";
     import HypothesisWorkplace from "./HypothesisWorkplace.vue";
-    import {AllData} from "@/classes/AllData";
-    import {Mistake} from "@/classes/Mistake";
-    import {AnalysedHypothesisMistake} from "@/classes/hypothesis/AnalysedHypothesisMistake";
     import ReferenceSentence from "@/components/ReferenceSentence.vue";
+    import {Prop} from "vue-property-decorator";
 
     @Component({
         components: {
@@ -43,16 +39,20 @@
         },
     })
     export default class Workplace extends Vue {
-        @Prop()
-        private allData?: AllData;
-
-        private updateHypothesisMistakes(mistakes: Mistake[]) {
-            const updatedArray: AnalysedHypothesisMistake[] = [];
-            mistakes.forEach((mistake: Mistake) => {
-                updatedArray.push(new AnalysedHypothesisMistake(mistake.id, undefined));
-            });
-            this.allData!.analysedHypothesisSentence!.analysedMistakes = updatedArray;
+        get localAllData() {
+            return this.$store.state.allData;
         }
+
+        get localAllDataInputComparison() {
+            return this.$store.getters.inputComparison;
+        }
+
+        get localAllDataHypothesisComparison() {
+            return this.$store.getters.hypothesisComparison;
+        }
+
+        @Prop()
+        private showReferences?: boolean;
     }
 </script>
 

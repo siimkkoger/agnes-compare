@@ -31,4 +31,8 @@
     .underline-span {
         box-shadow: inset 0 0px 0 white, inset 0 -1px 0 red;
     }
+
+    li {
+        overflow-wrap: break-word;
+    }
 </style>

@@ -4,7 +4,7 @@
             <div class="card-header"><h4>Input</h4></div>
             <div class="card-body">
                 <li class="list-group-item">
-                    <span v-for="w in sentence">
+                    <span v-for="w in localInputComparison.inputSentence">
                         <span v-if='w.referenceTag === referenceTagEnum.ALL'
                               class="word badge badge-pill badge-success"
                               @click="selectWord">{{ w.word }}</span>
@@ -16,38 +16,63 @@
                               @click="selectWord">{{ w.word }}</span>
                     </span>
                 </li>
-                <input class="form-control mr-sm-2 inputfield"
+                <input id="input-workplace-note"
+                       @change="updateNote($event.target.value)"
+                       v-model="localAnalysedInputSentence.note"
+                       class="form-control mr-sm-2 inputfield"
                        type="search"
-                       placeholder="Note" aria-label="Search">
-                <div class="">
-                    <button type="button" class="btn btn-primary" @click="confirmMistake">Add mistake</button>
-                    <form>
-                        <div class="form-group">
-                            <div v-for="error in [
-                                    mistakeTypeEnum.LEX,
-                                    mistakeTypeEnum.SPELLING,
-                                    mistakeTypeEnum.GRAMMAR,
-                                    mistakeTypeEnum.ORDER,
-                                ]">
-                                <div class="custom-control custom-radio">
-                                    <input v-model="selectedMistakeType"
-                                           v-bind:value="error"
-                                           type="radio"
-                                           class="custom-control-input" :id="'error-' + error"
-                                           name="defaultExampleRadios">
-                                    <label class="custom-control-label" :for="'error-' + error">{{error}}</label>
+                       placeholder="Note">
+                <div id="input-workplace-options" class="row">
+                    <div class="col-md-9">
+                        <form>
+                            <div class="form-check form-check-inline">
+                                <div v-for="mistake in allMistakeTypeValues">
+                                    <div class="custom-control custom-radio">
+                                        <input v-model="selectedMistakeType"
+                                               v-bind:value="mistake"
+                                               type="radio"
+                                               class="custom-control-input" :id="'mistake-' + mistake"
+                                               name="defaultExampleRadios">
+                                        <label class="custom-control-label" :for="'mistake-' + mistake">{{mistake}}</label>
+                                    </div>
                                 </div>
                             </div>
+                        </form>
+                        <div>
                             <input id="mistakeNeedsChange" type="checkbox" v-model="needToBeChanged">
                             <label for="mistakeNeedsChange">Mistake needs change</label>
                         </div>
-                    </form>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-primary" @click="confirmMistake">Add mistake</button>
+                    </div>
                 </div>
-                <div v-if="analysedInputSentence">
-                    <InputMistake v-for="mistake in analysedInputSentence.mistakes"
-                                  :wordsInvolved="mistake.wordsInvolved"
-                                  :type="mistake.type"
-                                  :needToBeChanged="mistake.needToBeChanged"/>
+                <div v-if="localAnalysedInputSentence">
+                    <div v-for="mistake in localAnalysedInputSentence.mistakes">
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-1">
+                                    <span>{{mistake.id}}</span>
+                                </div>
+                                <div class="col-2">
+                                    {{mistake.type}}
+                                </div>
+                                <div class="col-7">
+                                    Needs Change: {{mistake.needToBeChanged}}
+                                </div>
+                                <div class="col-2">
+                                    <button @click="removeMistake(mistake.id)"
+                                            type="button"
+                                            class="btn btn-outline-danger ">
+                                        remove
+                                    </button>
+                                </div>
+                                <div class="col-12">
+                                    Words: {{mistake.wordsInvolved}}
+                                </div>
+                            </div>
+                        </li>
+                    </div>
                 </div>
             </div>
             <div class="card-footer"></div>
@@ -56,31 +81,30 @@
 </template>
 
 <script lang="ts">
-    import {Component, Prop, Vue} from "vue-property-decorator";
-    import {MistakeTypeEnum} from "@/enums/MistakeTypeEnum";
+    import Vue from "vue";
+    import Component from "vue-class-component";
+    import {getAllMistakeTypeEnum, MistakeTypeEnum} from "@/enums/MistakeTypeEnum";
     import {Mistake} from "@/classes/Mistake";
-    import {InputWord} from "@/classes/input/InputWord";
-    import InputMistake from "@/components/InputMistake.vue";
-    import {AnalysedInput} from "@/classes/input/AnalysedInput";
     import {ReferenceTagEnum} from "@/enums/ReferenceTagEnum";
+    import {STORE_MUTATIONS} from "@/main";
 
-    @Component({
-        components: {
-            InputMistake,
-        },
-    })
+    @Component({})
     export default class InputWorkplace extends Vue {
-        @Prop({default: new AnalysedInput("Hardcoded note", [])})
-        private analysedInputSentence?: AnalysedInput;
-        @Prop()
-        private sentence?: InputWord[];
-        @Prop()
-        private updateHypothesisMistakes?: (mistakes: Mistake[]) => null;
+        get localInputComparison() {
+            return this.$store.getters.inputComparison;
+        }
+
+        get localAnalysedInputSentence() {
+            return this.$store.getters.analysedInputSentence;
+        }
+
+        private mistakeTypeEnum = MistakeTypeEnum;
         private referenceTagEnum = ReferenceTagEnum;
         private selectedWords: string[] = [];
-        private selectedMistakeType: MistakeTypeEnum = MistakeTypeEnum.LEX;
-        private mistakeTypeEnum = MistakeTypeEnum;
         private needToBeChanged: boolean = false;
+        private selectedMistakeType: MistakeTypeEnum = MistakeTypeEnum.LEX;
+        private allMistakeTypeValues: MistakeTypeEnum[] = getAllMistakeTypeEnum();
+        private inputWorkplaceNote: string = "";
 
         private selectWord(event: any) {
             if (event.target.classList.contains("word-selected")) {
@@ -96,19 +120,27 @@
             if (this.selectedWords.length < 1) {
                 return;
             }
-            this.analysedInputSentence!.mistakes.push(new Mistake(
-                this.analysedInputSentence!.mistakes.length + 1,
-                this.selectedMistakeType,
-                this.needToBeChanged,
-                this.selectedWords,
-            ));
+            this.$store.commit(STORE_MUTATIONS.ADD_INPUT_MISTAKE,
+                new Mistake(
+                    undefined,
+                    this.selectedMistakeType,
+                    this.needToBeChanged,
+                    this.selectedWords,
+                ));
             this.selectedWords = [];
             this.selectedMistakeType = MistakeTypeEnum.LEX;
             this.needToBeChanged = false;
             for (const element of document.getElementsByClassName("word")) {
                 element.classList.remove("word-selected");
             }
-            this.updateHypothesisMistakes!(this.analysedInputSentence!.mistakes);
+        }
+
+        private removeMistake(mistakeId: number) {
+            this.$store.commit(STORE_MUTATIONS.REMOVE_INPUT_MISTAKE, mistakeId)
+        }
+
+        private updateNote(note: string) {
+            this.$store.commit(STORE_MUTATIONS.ADD_INPUT_NOTE, note)
         }
 
         private showListMessage(close: boolean) {
@@ -147,7 +179,12 @@
     #input-container {
         margin-top: 20px;
         margin-bottom: 20px;
-        margin-right: 10px;
-        margin-left: 10px;
+        margin-right: 5px;
+        margin-left: 5px;
+    }
+
+    #input-workplace-options {
+        margin-top: 20px;
+        margin-bottom: 20px;
     }
 </style>

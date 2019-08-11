@@ -16,6 +16,11 @@
                                 class="btn btn-outline-success my-2 my-sm-0">Motivation
                         </button>
                     </li>
+                    <li>
+                        <button v-on:click="toggleReferences"
+                                class="btn btn-outline-success my-2 my-sm-0">Toggle References
+                        </button>
+                    </li>
                 </ul>
                 <div class="form-inline my-2 my-lg-0">
                     <div v-if="availableFiles.length === 0">
@@ -35,7 +40,10 @@
                             <option disabled selected value="">File name</option>
                             <option v-for="file in availableFiles">{{file}}</option>
                         </select>
-                        <input class="form-control mr-sm-2" v-model="lineNr" type="number" :min="MIN_LINE"
+                        <input class="form-control mr-sm-2"
+                               v-model.number="lineNr"
+                               type="number"
+                               :min="MIN_LINE"
                                placeholder="Line nr" aria-label="Line Nr">
                         <button v-on:click="getSentences"
                                 class="btn btn-outline-success my-2 my-sm-0">
@@ -71,18 +79,20 @@
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             Sending data to server...
         </button>
-        <Workplace v-if="allData && !sendingServerData && !loadingServerData" :allData="allData"></Workplace>
+        <Workplace v-if="localAllData && !sendingServerData && !loadingServerData"
+                    :showReferences="showReferences"></Workplace>
     </div>
 </template>
 
 <script lang="ts">
-    import {Component, Vue} from "vue-property-decorator";
+    import Vue from 'vue';
+    import Component from "vue-class-component";
     import {LanguageEnum, stringToLanguage} from "@/enums/LanguageEnum";
-    import {AllData} from "@/classes/AllData";
-    import {EvaluationData} from "@/classes/EvaluationData";
     import Rocky from "@/components/Rocky.vue";
     import {LanguageService} from "@/services/LanguageService";
     import Workplace from "@/components/Workplace.vue";
+    import {STORE_MUTATIONS} from "@/main";
+    import {EvaluationData} from "@/classes/EvaluationData";
 
     @Component({
         components: {
@@ -91,7 +101,11 @@
         },
     })
     export default class NavBar extends Vue {
-        private allData: AllData = new AllData();
+        get localAllData() {
+            return this.$store.state.allData;
+        }
+
+        private showReferences: boolean = true;
         private languageEnum = LanguageEnum;
         private loadingServerData: boolean = false;
         private sendingServerData: boolean = false;
@@ -128,7 +142,7 @@
             this.loadingServerData = true;
             LanguageService.getFirstSentence(this.chosenLanguage!, this.lineNr, fileName!)
                 .then((res) => res.json())
-                .then((res) => this.allData = res)
+                .then((res) => this.$store.commit(STORE_MUTATIONS.SET_ALL_DATA, res))
                 .catch((error) => this.showServerErrorMessage(error))
                 .finally(() => this.loadingServerData = false);
             this.showGetFirstSentenceErrorMessage(false);
@@ -136,11 +150,14 @@
 
         private sendAnalysedDataToServer() {
             this.sendingServerData = true;
-            const evaluationData = new EvaluationData(
-                this.allData!.analysedHypothesisSentence,
-                this.allData!.analysedInputSentence);
-            LanguageService.saveAnalysedData(evaluationData)
-                .then((response) => response.json())
+            LanguageService.saveAnalysedData(new EvaluationData(
+                this.localAllData.analysedHypothesisSentence,
+                this.localAllData.analysedInputSentence
+            ))
+                .then((response) => {
+                    this.lineNr = this.lineNr! + 1;
+                    this.getSentences();
+                })
                 .catch((error) => this.showServerErrorMessage(error))
                 .finally(() => this.sendingServerData = false);
         }
@@ -178,6 +195,10 @@
             } else {
                 x.style.display = "none";
             }
+        }
+
+        private toggleReferences() {
+            this.showReferences = !this.showReferences;
         }
     }
 </script>

@@ -1,6 +1,9 @@
 <template>
     <div>
-        <li class="list-group-item">Id: {{mistakeId}}, Mistake Evaluation: {{mistakeEvaluation}}</li>
+        <li class="list-group-item">
+            Id: {{mistakeId}},
+            Mistake Evaluation: {{mistakeEvaluation}}
+        </li>
     </div>
 </template>
 
